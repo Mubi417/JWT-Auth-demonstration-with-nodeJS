@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+    <head><title>Test</title></head>
+    <style>
+        #login-success{
+            display: none;
+        }
+    </style>
+    <body>
+        <input type="text" id="username" placeholder="username">
+        <input type="password" id="password" placeholder="password">
+        <button id="login">Login</button>
+
+        <div id="login-success">
+            <p id="message"></p>
+            <button id="get-stuff">Get stuff</button>
+            <p id="stuff"></p>
+        </div>
+        
+    </body>
+
+    <script>
+
+        document.querySelector('#login').addEventListener('click', (e)=> {
+            e.preventDefault();
+            fetch('http://localhost:3000/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: document.querySelector('#username').value,
+                    password: document.querySelector('#password').value,
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.status) {
+                    document.querySelector('#get-stuff').style.display = "none";
+                } else {
+                    document.querySelector('#get-stuff').style.display = "block";
+                }
+                document.querySelector('#login-success').style.display = 'block';
+                document.querySelector('#message').textContent = data.message;
+
+                let token = data.token;
+                localStorage.setItem('token',token); //storing token in local storage for easy reusing
+            });
+        });
+
+
+        document.querySelector('#get-stuff').addEventListener('click', (e)=> {
+            e.preventDefault();
+            fetch('http://localhost:3000/getstuff', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `bearer ${localStorage.getItem('token')}`
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.status) {
+                    document.querySelector('#stuff').textContent = data.message;
+                } else {
+                    document.querySelector('#stuff').innerHTML = 
+                    `<p><b>name: </b>${data.data.name}<br>
+                        <b>type: </b>${data.data.type}<br>
+                        <b>aim: </b>${data.data.aim}<br>
+                        <b>peak: </b>${data.data.peak}</p>`
+                }
+                //localStorage.removeItem('token'); use this to remove token when done i.e when logging out
+            });
+        });
+
+
+    </script>
+
+</html>
